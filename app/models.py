@@ -9,19 +9,19 @@ class Task(models.Model):
     def __str__(self):
         return self.title
 
-class Submission(models.Model):
+class Submissions(models.Model):
     task = models.ForeignKey(Task, related_name='submissions', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='submissions', on_delete=models.CASCADE)
     completed_at = models.DateTimeField(blank=True, null=True)
-    is_approved = models.BooleanField(default=False)
+    is_submitted = models.BooleanField(default=False)
 
 
 
     def save(self, *args, **kwargs):
         # If the submission is not approved, do not set completed_at
-        if not self.is_approved:
+        if not self.is_submitted:
             self.completed_at = None  
-        elif self.is_approved and not self.completed_at:
+        elif self.is_submitted and not self.completed_at:
             self.completed_at = models.DateTimeField(auto_now_add=True) 
             
         super().save(*args, **kwargs)  # Call the parent class's save method
