@@ -77,10 +77,10 @@ def upload_submission(request):
         return Response({"error": "Task with the given name does not exist."}, status=status.HTTP_404_NOT_FOUND)
 
     # Checks if the user already submitted on this task or not
-    existing_submission = Submission.objects.filter(task=task, user=request.user).first()
+    existing_submission = Submissions.objects.filter(task=task, user=request.user).first()
     if existing_submission:
-        existing_submission.is_approved = data.get("is_approved", False)
-        if existing_submission.is_approved:
+        existing_submission.is_submitted = data.get("is_submitted", False)
+        if existing_submission.is_submitted:
             existing_submission.completed_at = timezone.now()  # Set the completed_at timestamp
         else:
             existing_submission.completed_at = None  # Reset completed_at if not approved
@@ -91,7 +91,7 @@ def upload_submission(request):
     # Create the submission
     submission_data = {
         "task": task.id,  
-        "is_approved": data.get("is_approved", False), 
+        "is_submitted": data.get("is_submitted", False), 
     }
     # if submission_data["is_approved"] == False:
     #     return Response({"error": "You have not completed the task."}, status=status.HTTP_400_BAD_REQUEST)
@@ -101,7 +101,7 @@ def upload_submission(request):
     if serializer.is_valid():
         submission = serializer.save(user=request.user, task=task) 
 
-        if submission.is_approved:
+        if submission.is_submitted:
             submission.completed_at = timezone.now()
             submission.save()
          
@@ -122,7 +122,7 @@ def view_submitted_tasks(request, task_id):
         return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
     
     # to show all submiaaion on a given task
-    submissions = Submission.objects.filter(task=task, user=request.user, is_approved=True)
+    submissions = Submissions.objects.filter(task=task, user=request.user, is_submitted=True)
     
     if not submissions:
         return Response({"message": "No submissions are made on this tasks."}, status=status.HTTP_404_NOT_FOUND)
@@ -139,7 +139,7 @@ def view_submitted_tasks(request, task_id):
 @permission_classes([IsAuthenticated])
 def list_pending_submission(request):
     # Filter pending submissions for the authenticated user
-    pending_submissions = Submission.objects.filter(user=request.user, is_approved=False)
+    pending_submissions = Submissions.objects.filter(user=request.user, is_submitted=False)
     
     if not pending_submissions:
         return Response({"message": "No pending submissions."}, status=status.HTTP_404_NOT_FOUND)
